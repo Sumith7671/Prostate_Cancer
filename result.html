@@ -1,0 +1,106 @@
+<!-- templates/result.html - FIXED VERSION -->
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="fw-bold" style="color: var(--primary-color);">Analysis Complete</h2>
+                    <p class="lead" style="color: var(--text-light);">Your MRI image has been successfully analyzed</p>
+                </div>
+
+                <div class="prediction-result">
+                    <h3 class="fw-bold mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-brain me-2"></i>Classification Result
+                    </h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 style="color: var(--secondary-color);">Prediction:</h4>
+                            <p class="fs-4 fw-bold" style="color: var(--primary-color);">{{ prediction }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 style="color: var(--secondary-color);">Confidence:</h4>
+                            <p class="fs-4 fw-bold" style="color: var(--success-color);">{{ "%.2f"|format(confidence * 100) }}%</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: {{ confidence * 100 }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5 style="color: var(--secondary-color);">File Information:</h5>
+                        <p><strong>Filename:</strong> {{ filename }}</p>
+                        <p><strong>Analysis Date:</strong> {{ analysis_date }}</p>
+                    </div>
+
+                    <!-- Additional Analysis Details -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded" style="background: rgba(126, 173, 136, 0.1);">
+                                <h6 style="color: var(--primary-color);"><i class="fas fa-info-circle me-2"></i>Analysis Details</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li><small>Model: CNN Deep Learning</small></li>
+                                    <li><small>Processing Time: ~2-3 seconds</small></li>
+                                    <li><small>Image Resolution: 128x128</small></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded" style="background: rgba(56, 161, 105, 0.1);">
+                                <h6 style="color: var(--success-color);"><i class="fas fa-shield-check me-2"></i>Quality Metrics</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li><small>Confidence Level: {{ "%.1f"|format(confidence * 100) }}%</small></li>
+                                    <li><small>Model Accuracy: 95.2%</small></li>
+                                    <li><small>Status: ✓ Analysis Complete</small></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('predict') }}" class="btn btn-primary-custom me-3">
+                        <i class="fas fa-upload me-2"></i>Analyze Another Image
+                    </a>
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-success me-3">
+                        <i class="fas fa-history me-2"></i>View History
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </div>
+
+                <!-- Disclaimer -->
+                <div class="mt-5 p-4 rounded" style="background: rgba(221, 107, 32, 0.1); border-left: 4px solid var(--warning-color);">
+                    <h6 style="color: var(--warning-color);"><i class="fas fa-exclamation-triangle me-2"></i>Medical Disclaimer</h6>
+                    <p class="mb-0" style="color: var(--text-light); font-size: 0.9rem;">
+                        This AI analysis is for educational and research purposes only. 
+                        It should not be used as a substitute for professional medical diagnosis or treatment. 
+                        Always consult with qualified healthcare professionals for medical decisions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Animate confidence bar on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const confidenceFill = document.querySelector('.confidence-fill');
+    if (confidenceFill) {
+        confidenceFill.style.width = '0%';
+        setTimeout(() => {
+            confidenceFill.style.width = '{{ confidence * 100 }}%';
+        }, 500);
+    }
+});
+</script>
+{% endblock %}

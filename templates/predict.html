@@ -1,0 +1,173 @@
+<!-- templates/predict.html - Updated with better DICOM support -->
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold" style="color: var(--primary-color);">
+                        <i class="fas fa-microscope me-3"></i>MRI Image Analysis
+                    </h2>
+                    <p class="lead" style="color: var(--text-light);">
+                        Upload your MRI image for AI-powered classification
+                    </p>
+                </div>
+
+                <div class="card-custom">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="upload-area" onclick="document.getElementById('fileInput').click();">
+                            <div class="mb-3">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 4rem; color: var(--accent-color);"></i>
+                            </div>
+                            <h4 style="color: var(--primary-color);">Drop your MRI image here</h4>
+                            <p style="color: var(--text-light);">or click to browse files</p>
+                            <p><small class="text-muted">Supported formats: <strong>DICOM (.dcm)</strong>, JPG, PNG, TIFF</small></p>
+                            <input type="file" id="fileInput" name="file" 
+                                   accept=".dcm,.jpg,.jpeg,.png,.tiff,.tif,image/*" style="display: none;" 
+                                   onchange="handleFileSelect(this)">
+                        </div>
+
+                        <div id="filePreview" class="text-center mt-4" style="display: none;">
+                            <div id="imagePreview" style="display: none;">
+                                <img id="previewImage" src="" alt="Preview" 
+                                     style="max-width: 300px; max-height: 300px; border-radius: 15px;">
+                            </div>
+                            <div id="dicomInfo" style="display: none;">
+                                <div class="p-3 rounded" style="background: rgba(126, 173, 136, 0.1);">
+                                    <i class="fas fa-file-medical" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                                    <h5 style="color: var(--primary-color);">DICOM File Detected</h5>
+                                    <p class="text-muted mb-0">Medical image format ready for analysis</p>
+                                </div>
+                            </div>
+                            <p id="fileName" class="mt-3 fw-semibold"></p>
+                            <div id="fileDetails" class="mt-2 text-muted"></div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary-custom" id="analyzeBtn" disabled>
+                                <span id="btnText">
+                                    <i class="fas fa-brain me-2"></i>Analyze Image
+                                </span>
+                                <span id="btnLoading" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Processing...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Instructions -->
+                <div class="row mt-5">
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <div style="width: 60px; height: 60px; background: var(--light-green); 
+                                        border-radius: 15px; display: flex; align-items: center; 
+                                        justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-upload" style="color: var(--secondary-color); font-size: 1.5rem;"></i>
+                            </div>
+                            <h5 style="color: var(--primary-color);">1. Upload</h5>
+                            <p style="color: var(--text-light);">Select your MRI/DICOM file</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <div style="width: 60px; height: 60px; background: var(--light-green); 
+                                        border-radius: 15px; display: flex; align-items: center; 
+                                        justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-cogs" style="color: var(--secondary-color); font-size: 1.5rem;"></i>
+                            </div>
+                            <h5 style="color: var(--primary-color);">2. Process</h5>
+                            <p style="color: var(--text-light);">AI analyzes the DICOM data</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <div style="width: 60px; height: 60px; background: var(--light-green); 
+                                        border-radius: 15px; display: flex; align-items: center; 
+                                        justify-content: center; margin: 0 auto 1rem;">
+                                <i class="fas fa-chart-line" style="color: var(--secondary-color); font-size: 1.5rem;"></i>
+                            </div>
+                            <h5 style="color: var(--primary-color);">3. Results</h5>
+                            <p style="color: var(--text-light);">Get detailed classification</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Format Info -->
+                <div class="mt-5">
+                    <div class="card-custom">
+                        <h5 style="color: var(--primary-color);"><i class="fas fa-info-circle me-2"></i>Supported File Formats</h5>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-file-medical me-3" style="color: var(--success-color);"></i>
+                                    <div>
+                                        <strong>DICOM (.dcm)</strong>
+                                        <br><small class="text-muted">Medical imaging standard - Recommended</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-file-image me-3" style="color: var(--accent-color);"></i>
+                                    <div>
+                                        <strong>Standard Images</strong>
+                                        <br><small class="text-muted">JPG, PNG, TIFF formats</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+        const isDicom = fileName.toLowerCase().endsWith('.dcm');
+        
+        // Update file info
+        document.getElementById('fileName').textContent = fileName;
+        document.getElementById('fileDetails').innerHTML = 
+            `<small>Size: ${fileSize} MB | Type: ${isDicom ? 'DICOM Medical Image' : 'Standard Image'}</small>`;
+        
+        // Show appropriate preview
+        if (isDicom) {
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('dicomInfo').style.display = 'block';
+        } else {
+            // Show image preview for regular images
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('dicomInfo').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        document.getElementById('filePreview').style.display = 'block';
+        document.getElementById('analyzeBtn').disabled = false;
+    }
+}
+
+// Handle form submission
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const btnText = document.getElementById('btnText');
+    const btnLoading = document.getElementById('btnLoading');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline';
+    analyzeBtn.disabled = true;
+});
+</script>
+{% endblock %}

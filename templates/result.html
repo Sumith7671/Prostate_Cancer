@@ -1,0 +1,232 @@
+<!-- templates/result.html - Updated for Multi-Output Model -->
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-5">
+                    <div class="feature-icon mx-auto mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="fw-bold" style="color: var(--primary-color);">Analysis Complete</h2>
+                    <p class="lead" style="color: var(--text-light);">Your prostate MRI image has been successfully analyzed</p>
+                </div>
+
+                <!-- Main Results Cards -->
+                <div class="row mb-4">
+                    <!-- Cancer Detection Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="prediction-result h-100">
+                            <h3 class="fw-bold mb-3" style="color: var(--primary-color);">
+                                <i class="fas fa-search-plus me-2"></i>Cancer Detection
+                            </h3>
+                            
+                            <div class="text-center mb-3">
+                                <p class="fs-3 fw-bold mb-2" 
+                                   style="color: {% if cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %};">
+                                    {{ cancer_prediction }}
+                                </p>
+                                <p class="fs-5" style="color: var(--secondary-color);">
+                                    Confidence: {{ "%.1f"|format(cancer_confidence * 100) }}%
+                                </p>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill cancer-confidence" 
+                                         style="width: {{ cancer_confidence * 100 }}%;
+                                                background: {% if cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %};"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded mt-3" 
+                                 style="background: {% if cancer_prediction == 'Cancer Detected' %}rgba(221, 107, 32, 0.1){% else %}rgba(56, 161, 105, 0.1){% endif %};">
+                                <h6 style="color: {% if cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %};">
+                                    <i class="fas fa-info-circle me-2"></i>Assessment
+                                </h6>
+                                <p class="mb-0" style="color: var(--text-light); font-size: 0.9rem;">
+                                    {% if cancer_prediction == 'Cancer Detected' %}
+                                        The AI model has detected patterns consistent with potential cancerous tissue. 
+                                        Further medical evaluation is recommended.
+                                    {% else %}
+                                        No significant patterns suggesting cancer were detected by the AI model. 
+                                        Continue with regular medical monitoring.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Severity Classification Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="prediction-result h-100">
+                            <h3 class="fw-bold mb-3" style="color: var(--primary-color);">
+                                <i class="fas fa-layer-group me-2"></i>Risk Assessment
+                            </h3>
+                            
+                            <div class="text-center mb-3">
+                                <p class="fs-3 fw-bold mb-2" 
+                                   style="color: {% if severity_prediction == 'High Risk' %}#dc3545{% elif severity_prediction == 'Medium Risk' %}var(--warning-color){% elif severity_prediction == 'Low Risk' %}#ffc107{% else %}var(--success-color){% endif %};">
+                                    {{ severity_prediction }}
+                                </p>
+                                <p class="fs-5" style="color: var(--secondary-color);">
+                                    Confidence: {{ "%.1f"|format(severity_confidence * 100) }}%
+                                </p>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill severity-confidence" 
+                                         style="width: {{ severity_confidence * 100 }}%;
+                                                background: {% if severity_prediction == 'High Risk' %}#dc3545{% elif severity_prediction == 'Medium Risk' %}var(--warning-color){% elif severity_prediction == 'Low Risk' %}#ffc107{% else %}var(--success-color){% endif %};"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded mt-3" 
+                                 style="background: {% if severity_prediction == 'High Risk' %}rgba(220, 53, 69, 0.1){% elif severity_prediction == 'Medium Risk' %}rgba(221, 107, 32, 0.1){% elif severity_prediction == 'Low Risk' %}rgba(255, 193, 7, 0.1){% else %}rgba(56, 161, 105, 0.1){% endif %};">
+                                <h6 style="color: {% if severity_prediction == 'High Risk' %}#dc3545{% elif severity_prediction == 'Medium Risk' %}var(--warning-color){% elif severity_prediction == 'Low Risk' %}#ffc107{% else %}var(--success-color){% endif %};">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Risk Level
+                                </h6>
+                                <p class="mb-0" style="color: var(--text-light); font-size: 0.9rem;">
+                                    {% if severity_prediction == 'High Risk' %}
+                                        High risk patterns detected. Immediate medical consultation strongly recommended.
+                                    {% elif severity_prediction == 'Medium Risk' %}
+                                        Moderate risk patterns identified. Medical follow-up advised within reasonable timeframe.
+                                    {% elif severity_prediction == 'Low Risk' %}
+                                        Low risk indicators present. Regular monitoring and standard follow-up recommended.
+                                    {% else %}
+                                        No significant risk patterns detected. Continue routine medical care.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Information and Technical Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: rgba(126, 173, 136, 0.1);">
+                            <h6 style="color: var(--primary-color);"><i class="fas fa-file-medical me-2"></i>File Information</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><small><strong>Filename:</strong> {{ filename }}</small></li>
+                                <li><small><strong>Analysis Date:</strong> {{ analysis_date }}</small></li>
+                                <li><small><strong>File Type:</strong> {% if filename.lower().endswith('.dcm') %}DICOM Medical Image{% else %}Standard Image Format{% endif %}</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: rgba(56, 161, 105, 0.1);">
+                            <h6 style="color: var(--success-color);"><i class="fas fa-cogs me-2"></i>Technical Details</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><small>Model: Multi-Output U-Net</small></li>
+                                <li><small>Analysis Type: Cancer + Severity + Segmentation</small></li>
+                                <li><small>Processing Resolution: 128×128</small></li>
+                                <li><small>Status: ✓ Analysis Complete</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combined Summary -->
+                <div class="prediction-result mb-4">
+                    <h4 class="fw-bold mb-3" style="color: var(--primary-color);">
+                        <i class="fas fa-clipboard-list me-2"></i>Summary Report
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p style="color: var(--text-light);">
+                                <strong>Overall Assessment:</strong> The AI analysis detected 
+                                <strong style="color: {% if cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %};">
+                                    {{ cancer_prediction.lower() }}
+                                </strong> 
+                                with a 
+                                <strong style="color: {% if severity_prediction == 'High Risk' %}#dc3545{% elif severity_prediction == 'Medium Risk' %}var(--warning-color){% elif severity_prediction == 'Low Risk' %}#ffc107{% else %}var(--success-color){% endif %};">
+                                    {{ severity_prediction.lower() }}
+                                </strong> 
+                                classification. The cancer detection confidence is {{ "%.1f"|format(cancer_confidence * 100) }}% 
+                                and risk assessment confidence is {{ "%.1f"|format(severity_confidence * 100) }}%.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="d-inline-block p-2 rounded" 
+                                 style="background: {% if cancer_prediction == 'Cancer Detected' and severity_prediction in ['Medium Risk', 'High Risk'] %}rgba(220, 53, 69, 0.1){% elif cancer_prediction == 'Cancer Detected' %}rgba(221, 107, 32, 0.1){% else %}rgba(56, 161, 105, 0.1){% endif %};">
+                                <small style="color: {% if cancer_prediction == 'Cancer Detected' and severity_prediction in ['Medium Risk', 'High Risk'] %}#dc3545{% elif cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %};">
+                                    <i class="fas fa-flag me-1"></i>
+                                    {% if cancer_prediction == 'Cancer Detected' and severity_prediction == 'High Risk' %}
+                                        URGENT FOLLOW-UP
+                                    {% elif cancer_prediction == 'Cancer Detected' %}
+                                        MEDICAL FOLLOW-UP
+                                    {% else %}
+                                        ROUTINE MONITORING
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('predict') }}" class="btn btn-primary-custom me-3">
+                        <i class="fas fa-upload me-2"></i>Analyze Another Image
+                    </a>
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-success me-3">
+                        <i class="fas fa-history me-2"></i>View History
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </div>
+
+                <!-- Medical Disclaimer -->
+                <div class="mt-5 p-4 rounded" style="background: rgba(221, 107, 32, 0.1); border-left: 4px solid var(--warning-color);">
+                    <h6 style="color: var(--warning-color);"><i class="fas fa-exclamation-triangle me-2"></i>Important Medical Disclaimer</h6>
+                    <p class="mb-0" style="color: var(--text-light); font-size: 0.9rem;">
+                        This AI analysis is for <strong>research and educational purposes only</strong>. 
+                        It should <strong>never be used as a substitute for professional medical diagnosis, treatment, or advice</strong>. 
+                        The results are generated by an artificial intelligence model and may contain errors or inaccuracies.
+                        Always consult with qualified healthcare professionals and follow standard medical protocols for any health-related decisions.
+                        <strong>In case of medical emergency, contact your healthcare provider immediately.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.confidence-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(126, 173, 136, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+    background: var(--success-color);
+}
+
+.prediction-result {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(126, 173, 136, 0.2);
+}
+</style>
+
+<script>
+// Animate confidence bars on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const confidenceFills = document.querySelectorAll('.confidence-fill');
+    confidenceFills.forEach(fill => {
+        const originalWidth = fill.style.width;
+        fill.style.width = '0%';
+        setTimeout(() => {
+            fill.style.width = originalWidth;
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

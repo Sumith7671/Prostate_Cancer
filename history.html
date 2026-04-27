@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="fw-bold" style="color: var(--primary-color);">Analysis History</h2>
+                        <p style="color: var(--text-light);">All your previous MRI analyses</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('download_results') }}" class="btn btn-outline-success me-3">
+                            <i class="fas fa-download me-2"></i>Download CSV
+                        </a>
+                        <a href="{{ url_for('predict') }}" class="btn btn-primary-custom">
+                            <i class="fas fa-plus me-2"></i>New Analysis
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-custom">
+                    {% if predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Filename</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pred in predictions %}
+                                    <tr>
+                                        <td>{{ pred.created_at }}</td>
+                                        <td>
+                                            <i class="fas fa-file-image me-2" style="color: var(--accent-color);"></i>
+                                            {{ pred.filename[:40] }}{% if pred.filename|length > 40 %}...{% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge" 
+                                                  style="background: var(--success-color); color: white; padding: 0.5rem 1rem;">
+                                                {{ pred.prediction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-2">{{ "%.1f"|format(pred.confidence * 100) }}%</span>
+                                                <div style="width: 60px; height: 8px; background: rgba(126, 173, 136, 0.2); border-radius: 4px;">
+                                                    <div style="width: {{ pred.confidence * 100 }}%; height: 100%; background: var(--success-color); border-radius: 4px;"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails({{ pred.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history" style="font-size: 4rem; color: var(--accent-color); margin-bottom: 2rem;"></i>
+                            <h4 style="color: var(--primary-color);">No analysis history</h4>
+                            <p style="color: var(--text-light);">Your completed analyses will appear here</p>
+                            <a href="{{ url_for('predict') }}" class="btn btn-primary-custom">
+                                <i class="fas fa-upload me-2"></i>Start First Analysis
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewDetails(predId) {
+    // You can implement a modal or details view here
+    alert('Viewing details for prediction ID: ' + predId);
+}
+</script>
+{% endblock %}

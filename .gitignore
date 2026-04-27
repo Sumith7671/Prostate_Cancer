@@ -1,0 +1,9 @@
+uploads/
+*.dcm
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.h5
+*.keras
+*.db

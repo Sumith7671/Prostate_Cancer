@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="fw-bold" style="color: var(--primary-color);">
+                            Welcome back, {{ session.username }}!
+                        </h2>
+                        <p style="color: var(--text-light);">Prostate Cancer AI Analysis Dashboard</p>
+                    </div>
+                    <a href="{{ url_for('predict') }}" class="btn btn-primary-custom">
+                        <i class="fas fa-plus me-2"></i>New Analysis
+                    </a>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-5">
+                    <div class="col-md-3">
+                        <div class="card-custom text-center">
+                            <i class="fas fa-images" style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--primary-color);">{{ predictions|length }}</h3>
+                            <p style="color: var(--text-light);">Total Analyses</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-custom text-center">
+                            <i class="fas fa-search-plus" style="font-size: 2.5rem; color: var(--success-color); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--primary-color);">
+                                {% set cancer_count = predictions|selectattr('cancer_prediction', 'equalto', 'Cancer Detected')|list|length %}
+                                {% if predictions|length > 0 %}{{ cancer_count }}{% else %}0{% endif %}
+                            </h3>
+                            <p style="color: var(--text-light);">Cancer Detected</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-custom text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: var(--warning-color); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--primary-color);">
+                                {% set high_risk_count = predictions|selectattr('severity_prediction', 'equalto', 'High Risk')|list|length %}
+                                {% if predictions|length > 0 %}{{ high_risk_count }}{% else %}0{% endif %}
+                            </h3>
+                            <p style="color: var(--text-light);">High Risk Cases</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card-custom text-center">
+                            <i class="fas fa-chart-line" style="font-size: 2.5rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--primary-color);">
+                                {% if predictions|length > 0 %}
+                                    {{ "%.1f"|format((predictions|sum(attribute='cancer_confidence') / predictions|length) * 100) }}%
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </h3>
+                            <p style="color: var(--text-light);">Avg Confidence</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Predictions -->
+                <div class="card-custom">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 style="color: var(--primary-color);">Recent Analyses</h4>
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-success">
+                            <i class="fas fa-history me-2"></i>View All
+                        </a>
+                    </div>
+
+                    {% if predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Filename</th>
+                                        <th>Cancer Detection</th>
+                                        <th>Risk Level</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pred in predictions %}
+                                    <tr>
+                                        <td>{{ pred.created_at }}</td>
+                                        <td>
+                                            <i class="fas fa-file-medical me-2" style="color: var(--accent-color);"></i>
+                                            {{ pred.filename[:25] }}{% if pred.filename|length > 25 %}...{% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge" 
+                                                  style="background: {% if pred.cancer_prediction == 'Cancer Detected' %}var(--warning-color){% else %}var(--success-color){% endif %}; color: white; padding: 0.4rem 0.8rem;">
+                                                {{ pred.cancer_prediction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge" 
+                                                  style="background: {% if pred.severity_prediction == 'High Risk' %}#dc3545{% elif pred.severity_prediction == 'Medium Risk' %}var(--warning-color){% elif pred.severity_prediction == 'Low Risk' %}#ffc107{% else %}var(--success-color){% endif %}; color: white; padding: 0.4rem 0.8rem;">
+                                                {{ pred.severity_prediction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <small class="me-2">C: {{ "%.0f"|format(pred.cancer_confidence * 100) }}%</small>
+                                                <small>R: {{ "%.0f"|format(pred.severity_confidence * 100) }}%</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Quick Summary -->
+                        {% if predictions|length > 0 %}
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded" style="background: rgba(126, 173, 136, 0.1);">
+                                    <h6 style="color: var(--primary-color);"><i class="fas fa-chart-pie me-2"></i>Detection Summary</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small>No Cancer: {{ predictions|selectattr('cancer_prediction', 'equalto', 'No Cancer')|list|length }}</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small>Cancer Detected: {{ predictions|selectattr('cancer_prediction', 'equalto', 'Cancer Detected')|list|length }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded" style="background: rgba(56, 161, 105, 0.1);">
+                                    <h6 style="color: var(--success-color);"><i class="fas fa-layer-group me-2"></i>Risk Distribution</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small>None/Low: {{ (predictions|selectattr('severity_prediction', 'equalto', 'None')|list|length) + (predictions|selectattr('severity_prediction', 'equalto', 'Low Risk')|list|length) }}</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small>Med/High: {{ (predictions|selectattr('severity_prediction', 'equalto', 'Medium Risk')|list|length) + (predictions|selectattr('severity_prediction', 'equalto', 'High Risk')|list|length) }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-microscope" style="font-size: 4rem; color: var(--accent-color); margin-bottom: 2rem;"></i>
+                            <h4 style="color: var(--primary-color);">No analyses yet</h4>
+                            <p style="color: var(--text-light);">Upload your first prostate MRI image to get started with AI-powered cancer detection and risk assessment</p>
+                            <a href="{{ url_for('predict') }}" class="btn btn-primary-custom">
+                                <i class="fas fa-upload me-2"></i>Start Analysis
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Model Information -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card-custom">
+                            <h5 style="color: var(--primary-color);"><i class="fas fa-info-circle me-2"></i>AI Model Information</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p><strong>Model Type:</strong> Multi-Output U-Net</p>
+                                    <p><strong>Architecture:</strong> Deep Convolutional Neural Network</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Analysis Types:</strong></p>
+                                    <ul class="mb-0">
+                                        <li><small>Cancer Detection (Binary Classification)</small></li>
+                                        <li><small>Risk Assessment (4-Level Classification)</small></li>
+                                        <li><small>Tissue Segmentation (3-Class)</small></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <p><strong>Input:</strong> 128×128 RGB Images</p>
+                                    <p><strong>Supports:</strong> DICOM, JPG, PNG formats</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
