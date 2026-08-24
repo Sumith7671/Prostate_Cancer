@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: prostate-cancer-detection
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MODEL_PATH
+        value: prostate_multi_output_model.h5

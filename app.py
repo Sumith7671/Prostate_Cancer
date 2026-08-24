@@ -14,8 +14,8 @@ import pydicom
 import json
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Ensure upload directory exists
@@ -38,20 +38,36 @@ def combined_segmentation_loss(y_true, y_pred):
     return 0.5 * tf.keras.losses.categorical_crossentropy(y_true, y_pred) + 0.5 * dice_loss(y_true, y_pred)
 
 # Load the trained model
-MODEL_PATH = 'prostate_multi_output_model.h5'  # Update with your model path
+MODEL_PATH = os.environ.get('MODEL_PATH', 'prostate_multi_output_model.h5')
+MODEL_URL = os.environ.get('MODEL_URL', '')
+
+# Automatically download model if missing and MODEL_URL is configured
+if not os.path.exists(MODEL_PATH) and MODEL_URL:
+    try:
+        import urllib.request
+        print(f"Downloading model from {MODEL_URL} to {MODEL_PATH}...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print("Model downloaded successfully!")
+    except Exception as dl_err:
+        print(f"Failed to download model from MODEL_URL: {dl_err}")
+
 try:
-    custom_objects = {
-        'dice_coefficient': dice_coefficient,
-        'combined_segmentation_loss': combined_segmentation_loss,
-        'dice_loss': dice_loss
-    }
-    model = tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_objects)
-    print("Multi-output model loaded successfully!")
-    print(f"Model inputs: {model.input_shape}")
-    print(f"Model outputs: {[output.shape for output in model.outputs]}")
+    if os.path.exists(MODEL_PATH):
+        custom_objects = {
+            'dice_coefficient': dice_coefficient,
+            'combined_segmentation_loss': combined_segmentation_loss,
+            'dice_loss': dice_loss
+        }
+        model = tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_objects)
+        print("Multi-output model loaded successfully!")
+        print(f"Model inputs: {model.input_shape}")
+        print(f"Model outputs: {[output.shape for output in model.outputs]}")
+    else:
+        model = None
+        print(f"Warning: Model file '{MODEL_PATH}' not found on disk.")
 except Exception as e:
     model = None
-    print(f"Warning: Model not found. Error: {e}")
+    print(f"Warning: Model failed to load. Error: {e}")
 
 # Database setup - Updated to include new prediction fields
 def init_db():
@@ -467,4 +483,6 @@ def logout():
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1')
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
